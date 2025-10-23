@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Write Your Story - Readium</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Professional Color Scheme */
+        :root {
+            --primary: #2C5530;
+            --secondary: #6B8E23;
+            --accent: #8FBC8F;
+            --light: #F8F9FA;
+            --dark: #2F4F4F;
+            --white: #FFFFFF;
+            --gray-light: #E9ECEF;
+            --gray-medium: #6C757D;
+            --gray-dark: #495057;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: var(--white);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(44, 85, 48, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(44, 85, 48, 0.15);
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Create Post Styles */
+        .create-post-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 4rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .create-post-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23ffffff" opacity="0.03"><polygon points="1000,0 1000,100 0,100"></polygon></svg>');
+            background-size: cover;
+        }
+
+        .creation-steps {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .step i {
+            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .step.active i {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .step span {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .creation-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(44, 85, 48, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--gray-light);
+            margin: -3rem auto 2rem;
+            position: relative;
+            max-width: 900px;
+        }
+
+        .creation-card .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2rem;
+            border-bottom: none;
+        }
+
+        .form-progress {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            display: block;
+            height: 100%;
+            width: 33%;
+            background: white;
+            border-radius: 3px;
+            animation: progress-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes progress-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+        }
+
+        .section-title i {
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid var(--gray-light);
+            border-radius: 10px;
+            padding: 0.875rem 1rem;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            background: var(--white);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(44, 85, 48, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-label {
+            color: var(--dark);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .form-label i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+            width: 20px;
+            text-align: center;
+        }
+
+        .form-text {
+            color: var(--gray-medium);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .category-option {
+            padding: 1.5rem 1rem;
+            border: 2px solid var(--gray-light);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .category-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(44, 85, 48, 0.1);
+        }
+
+        .category-option.selected {
+            border-color: var(--primary);
+            background: rgba(44, 85, 48, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .category-option i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .category-option .form-check-label {
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .form-check-input {
+            display: none;
+        }
+
+        .content-tools {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            margin-top: 1rem;
+        }
+
+        .formatting-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .format-btn {
+            background: var(--white);
+            border: 2px solid var(--gray-light);
+            color: var(--dark);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .format-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .form-actions {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--gray-light);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn-create {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            border: 2px solid;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 1rem;
+            gap: 0.75rem;
+        }
+
+        .btn-primary-create {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary-create:hover {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 142, 35, 0.3);
+        }
+
+        .btn-outline-create {
+            background: transparent;
+            border-color: var(--gray-medium);
+            color: var(--gray-dark);
+        }
+
+        .btn-outline-create:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        /* Image Preview */
+        #imagePreviewContainer {
+            transition: all 0.3s ease;
+        }
+
+        .image-preview-box {
+            border: 2px dashed var(--gray-light);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: var(--light);
+            transition: all 0.3s ease;
+        }
+
+        .image-preview-box.has-image {
+            border-color: var(--primary);
+            background: rgba(44, 85, 48, 0.02);
+        }
+
+        #imagePreview {
+            max-height: 250px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .back-btn {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .creation-steps {
+                gap: 1.5rem;
+            }
+
+            .step i {
+                font-size: 1.4rem;
+                padding: 1rem;
+            }
+
+            .creation-card {
+                margin: -2rem 1rem 2rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-create {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .formatting-buttons {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .create-post-hero {
+                padding: 3rem 0;
+            }
+
+            .creation-steps {
+                gap: 1rem;
+            }
+
+            .step span {
+                font-size: 0.8rem;
+            }
+
+            .creation-card .card-header {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+    </a>
+
+    <!-- Create Post Hero Section -->
+    <section class="create-post-hero">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="display-5 fw-bold mb-4">Share Your Story</h1>
+                    <p class="lead mb-4">Inspire others with your experiences, insights, and creativity</p>
+                    <div class="creation-steps">
+                        <div class="step active">
+                            <i class="fas fa-edit"></i>
+                            <span>Write</span>
+                        </div>
+                        <div class="step">
+                            <i class="fas fa-eye"></i>
+                            <span>Preview</span>
+                        </div>
+                        <div class="step">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Publish</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Create Post Form Section -->
+    <section class="create-post-section py-5">
+        <div class="container">
+            <div class="creation-card">
+                <div class="card-header">
+                    <h3 class="mb-2">
+                        <i class="fas fa-plus-circle me-2"></i>Create New Story
+                    </h3>
+                    <p class="mb-0 opacity-75">Share your thoughts, experiences, and insights with our community</p>
+                    <div class="form-progress">
+                        <div class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form action="/make_post" method="POST" enctype="multipart/form-data" id="createPostForm">
+                        <!-- Author Information -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-user"></i>About You
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="authorName" class="form-label">
+                                            <i class="fas fa-signature"></i>Your Name
+                                        </label>
+                                        <input type="text" class="form-control" id="authorName" name="authorName"
+                                               placeholder="Enter your full name" required>
+                                        <div class="form-text">This name will be displayed as the author</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="authorImage" class="form-label">
+                                            <i class="fas fa-camera"></i>Profile Image
+                                        </label>
+                                        <input type="url" class="form-control" id="authorImage" name="authorImage"
+                                               placeholder="https://example.com/your-photo.jpg">
+                                        <div class="form-text">Add a link to your profile picture (optional)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Story Content -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-file-alt"></i>Your Story
+                            </h5>
+
+                            <!-- Story Title -->
+                            <div class="form-group mb-4">
+                                <label for="postTitle" class="form-label">
+                                    <i class="fas fa-heading"></i>Story Title
+                                </label>
+                                <input type="text" class="form-control" id="postTitle" name="postTitle"
+                                       placeholder="Catchy title that grabs attention..." required>
+                                <div class="form-text">Make it engaging and descriptive</div>
+                            </div>
+
+                            <!-- Featured Image -->
+                            <div class="form-group mb-4">
+                                <label for="postImage" class="form-label">
+                                    <i class="fas fa-image"></i>Featured Image
+                                </label>
+                                <input type="url" class="form-control" id="postImage" name="postImage"
+                                       placeholder="https://example.com/featured-image.jpg" required>
+                                <div class="form-text">Add a beautiful image that represents your story</div>
+
+                                <!-- Image Preview -->
+                                <div class="mt-3" id="imagePreviewContainer" style="display: none;">
+                                    <div class="image-preview-box" id="imagePreviewBox">
+                                        <img id="imagePreview" src="" alt="Preview" class="img-fluid mb-3" style="display: none;">
+                                        <div id="imagePreviewText" class="text-muted">Image preview will appear here</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Story Content -->
+                            <div class="form-group mb-4">
+                                <label for="postDescription" class="form-label">
+                                    <i class="fas fa-align-left"></i>Your Story
+                                </label>
+                                <textarea class="form-control" id="postDescription" name="postDescription" rows="12"
+                                          placeholder="Share your story, experiences, and insights with our community. What do you want to tell the world?" required></textarea>
+                                </div>
+                            </div>
+
+                        <!-- Category Selection -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="fas fa-tags"></i>Category
+                            </h5>
+                            <div class="form-group">
+                                <div class="category-grid">
+                                    <div class="category-option" data-category="lifestyle">
+                                        <i class="fas fa-heart"></i>
+                                        <input class="form-check-input" type="radio" name="postCategory" id="categoryLifestyle" value="Lifestyle" required>
+                                        <label class="form-check-label" for="categoryLifestyle">
+                                            Lifestyle
+                                        </label>
+                                    </div>
+                                    <div class="category-option" data-category="travel">
+                                        <i class="fas fa-globe"></i>
+                                        <input class="form-check-input" type="radio" name="postCategory" id="categoryTravel" value="Travel">
+                                        <label class="form-check-label" for="categoryTravel">
+                                            Travel
+                                        </label>
+                                    </div>
+                                    <div class="category-option" data-category="personal">
+                                        <i class="fas fa-lightbulb"></i>
+                                        <input class="form-check-input" type="radio" name="postCategory" id="categoryPersonal" value="Personal Growth">
+                                        <label class="form-check-label" for="categoryPersonal">
+                                            Personal Growth
+                                        </label>
+                                    </div>
+                                    <div class="category-option" data-category="career">
+                                        <i class="fas fa-briefcase"></i>
+                                        <input class="form-check-input" type="radio" name="postCategory" id="categoryCareer" value="Career">
+                                        <label class="form-check-label" for="categoryCareer">
+                                            Career
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-actions">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn-create btn-outline-create" id="previewBtn">
+                                    <i class="fas fa-eye me-2"></i>Preview Story
+                                </button>
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-create btn-outline-create" id="saveDraftBtn">
+                                        <i class="fas fa-save me-2"></i>Save Draft
+                                    </button>
+                                    <button type="submit" class="btn-create btn-primary-create">
+                                        <i class="fas fa-paper-plane me-2"></i>Publish Story
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-eye me-2"></i>Story Preview
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Preview content will be inserted here by JavaScript -->
+                    <div id="previewContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-create btn-outline-create" data-bs-dismiss="modal">
+                        <i class="fas fa-edit me-2"></i>Continue Editing
+                    </button>
+                    <button type="button" class="btn-create btn-primary-create" onclick="document.getElementById('createPostForm').submit()">
+                        <i class="fas fa-paper-plane me-2"></i>Publish Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const postImageInput = document.getElementById('postImage');
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const imagePreviewBox = document.getElementById('imagePreviewBox');
+            const imagePreviewText = document.getElementById('imagePreviewText');
+            const previewBtn = document.getElementById('previewBtn');
+            const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+            const previewContent = document.getElementById('previewContent');
+
+            // Image URL preview
+            postImageInput.addEventListener('input', function() {
+                const imageUrl = this.value.trim();
+                if (imageUrl) {
+                    imagePreview.src = imageUrl;
+                    imagePreview.style.display = 'block';
+                    imagePreviewText.style.display = 'none';
+                    imagePreviewContainer.style.display = 'block';
+                    imagePreviewBox.classList.add('has-image');
+
+                    // Handle image load error
+                    imagePreview.onerror = function() {
+                        imagePreview.style.display = 'none';
+                        imagePreviewText.textContent = 'Unable to load image. Please check the URL.';
+                        imagePreviewText.style.display = 'block';
+                        imagePreviewBox.classList.remove('has-image');
+                    };
+
+                    imagePreview.onload = function() {
+                        imagePreviewText.style.display = 'none';
+                        imagePreviewBox.classList.add('has-image');
+                    };
+                } else {
+                    imagePreviewContainer.style.display = 'none';
+                    imagePreviewBox.classList.remove('has-image');
+                }
+            });
+
+            // Category selection
+            document.querySelectorAll('.category-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                        // Update styling for all options
+                        document.querySelectorAll('.category-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        // Style selected option
+                        this.classList.add('selected');
+                    }
+                });
+            });
+
+            // Preview functionality
+            previewBtn.addEventListener('click', function() {
+                const authorName = document.getElementById('authorName').value || 'Anonymous Writer';
+                const authorImage = document.getElementById('authorImage').value || 'https://randomuser.me/api/portraits/men/32.jpg';
+                const postTitle = document.getElementById('postTitle').value || 'Untitled Story';
+                const postImage = document.getElementById('postImage').value;
+                const postContent = document.getElementById('postDescription').value || 'Start writing your amazing story...';
+                const category = document.querySelector('input[name="postCategory"]:checked')?.value || 'General';
+
+                // Create preview HTML
+                const previewHTML = `
+                    <div class="post-preview">
+                        ${postImage ? `
+                        <div class="preview-image-container mb-4">
+                            <img src="${postImage}" alt="${postTitle}" class="img-fluid rounded" style="width: 100%; height: 300px; object-fit: cover;">
+                            <div class="preview-category mt-2">
+                                <span class="badge bg-primary">${category}</span>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="preview-content">
+                            <div class="preview-author d-flex align-items-center mb-3">
+                                <img src="${authorImage}" alt="Author" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">${authorName}</h6>
+                                    <small class="text-muted">Storyteller</small>
+                                </div>
+                            </div>
+
+                            <h3 class="preview-title mb-3">${postTitle}</h3>
+                            <div class="preview-text">
+                                <p>${postContent}</p>
+                            </div>
+
+                            <div class="preview-stats d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <div class="d-flex gap-3">
+                                    <span class="text-muted">
+                                        <i class="far fa-heart me-1"></i>0
+                                    </span>
+                                    <span class="text-muted">
+                                        <i class="far fa-bookmark me-1"></i>Save
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="far fa-clock me-1"></i>
+                                    ${Math.ceil(postContent.split(' ').length / 200)} min read
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                previewContent.innerHTML = previewHTML;
+                previewModal.show();
+            });
+
+            // Form submission
+
+                // Basic validation
+                const requiredFields = ['authorName', 'postTitle', 'postImage', 'postDescription', 'postCategory'];
+                let isValid = true;
+
+                requiredFields.forEach(field => {
+                    const element = document.querySelector(`[name="${field}"]`);
+                    if (!element.value.trim()) {
+                        isValid = false;
+                        element.style.borderColor = 'var(--danger)';
+                    } else {
+                        element.style.borderColor = '';
+                    }
+                });
+
+
+
+                // Get form data
+                const formData = new FormData(this);
+
+                // Simulate form submission
+                console.log('Publishing story:', Object.fromEntries(formData));
+                alert('🎉 Your story has been published successfully!');
+
+            // Save draft functionality
+            document.getElementById('saveDraftBtn').addEventListener('click', function() {
+                const formData = {
+                    authorName: document.getElementById('authorName').value,
+                    authorImage: document.getElementById('authorImage').value,
+                    title: document.getElementById('postTitle').value,
+                    image: document.getElementById('postImage').value,
+                    description: document.getElementById('postDescription').value,
+                    category: document.querySelector('input[name="postCategory"]:checked')?.value
+                };
+
+                // Check if there's any content to save
+                const hasContent = Object.values(formData).some(value => value && value.trim() !== '');
+
+                if (!hasContent) {
+                    alert('Please add some content before saving as draft.');
+                    return;
+                }
+
+                console.log('Draft saved:', formData);
+
+                // Show success notification
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+                alert.style.zIndex = '9999';
+                alert.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Draft saved!</strong> You can continue editing later.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alert);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            });
+        });
+
+        // Text formatting functions
+        function formatText(type) {
+            const textarea = document.getElementById('postDescription');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+
+            let formattedText = '';
+
+            switch(type) {
+                case 'bold':
+                    formattedText = `**${selectedText}**`;
+                    break;
+                case 'italic':
+                    formattedText = `*${selectedText}*`;
+                    break;
+                case 'quote':
+                    formattedText = `> ${selectedText}`;
+                    break;
+                case 'link':
+                    formattedText = `[${selectedText}](https://example.com)`;
+                    break;
+            }
+
+            textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
+        }
+    </script>
+</body>
+</html>

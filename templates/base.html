@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Readium - Where Stories Come to Life{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Professional Color Scheme */
+        :root {
+            --primary: #2C5530;
+            --secondary: #6B8E23;
+            --accent: #8FBC8F;
+            --light: #F8F9FA;
+            --dark: #2F4F4F;
+            --white: #FFFFFF;
+            --gray-light: #E9ECEF;
+            --gray-medium: #6C757D;
+            --gray-dark: #495057;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+            padding-top: 76px; /* Space for fixed navbar */
+        }
+
+        /* Clean Professional Navbar */
+        .navbar-clean {
+            background: var(--white);
+            box-shadow: 0 2px 20px rgba(44, 85, 48, 0.1);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .navbar-brand-clean {
+            font-weight: 700;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            color: var(--primary) !important;
+            text-decoration: none;
+        }
+
+        .navbar-brand-clean i {
+            color: var(--secondary);
+            font-size: 1.8rem;
+            margin-right: 0.5rem;
+        }
+
+        .nav-link-clean {
+            font-weight: 500;
+            margin: 0 0.3rem;
+            transition: all 0.3s;
+            color: var(--gray-dark) !important;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link-clean:hover,
+        .nav-link-clean.active {
+            color: var(--primary) !important;
+            background: var(--light);
+            transform: translateY(-1px);
+        }
+
+        .nav-link-clean i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Clean Buttons */
+        .btn-clean {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+            border: 2px solid;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+            gap: 0.5rem;
+        }
+
+        .btn-primary-clean {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary-clean:hover {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(107, 142, 35, 0.3);
+        }
+
+        .btn-outline-clean {
+            background: transparent;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline-clean:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        /* Search Bar */
+        .search-container-clean {
+            max-width: 300px;
+        }
+
+        .search-input-clean {
+            background: var(--light);
+            border: 2px solid var(--gray-light);
+            color: var(--dark);
+            border-radius: 25px;
+            padding: 0.6rem 1.5rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .search-input-clean::placeholder {
+            color: var(--gray-medium);
+        }
+
+        .search-input-clean:focus {
+            background: var(--white);
+            border-color: var(--primary);
+            color: var(--dark);
+            box-shadow: 0 0 0 3px rgba(44, 85, 48, 0.1);
+        }
+
+        .search-btn-clean {
+            background: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 25px;
+            color: var(--white);
+            padding: 0.6rem 1.2rem;
+            margin-left: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn-clean:hover {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            transform: translateY(-1px);
+        }
+
+        /* Mobile Menu */
+        .navbar-toggler-clean {
+            border: 2px solid var(--primary);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+        }
+
+        .navbar-toggler-clean:focus {
+            box-shadow: 0 0 0 3px rgba(44, 85, 48, 0.1);
+        }
+
+        .navbar-toggler-icon-clean {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%232C5530' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        /* User Actions */
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light);
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 85, 48, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: var(--white);
+                padding: 1.5rem;
+                border-radius: 12px;
+                margin-top: 1rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                border: 2px solid var(--light);
+            }
+
+            .nav-link-clean {
+                margin: 0.5rem 0;
+                padding: 0.8rem 1rem;
+                justify-content: flex-start;
+            }
+
+            .search-container-clean {
+                margin: 1rem 0;
+                max-width: 100%;
+            }
+
+            .user-actions {
+                justify-content: center;
+                margin-top: 1rem;
+                gap: 0.8rem;
+            }
+
+            .btn-clean {
+                width: 100%;
+                margin: 0.3rem 0;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .navbar-brand-clean {
+                font-size: 1.5rem;
+            }
+
+            .search-container-clean {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar-brand-clean {
+                font-size: 1.3rem;
+            }
+
+            .nav-link-clean {
+                font-size: 0.9rem;
+            }
+
+            .btn-clean {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Clean Professional Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-clean fixed-top">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand-clean" href="{{ url_for('home_page') }}">
+                <i class="fas fa-book-reader"></i>
+                Readium
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler navbar-toggler-clean" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon-clean"></span>
+            </button>
+
+            <!-- Navigation Items -->
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <!-- Left Navigation -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link-clean {{ 'active' if request.endpoint == 'home_page' }}" href="{{ url_for('home_page') }}">
+                            <i class="fas fa-home"></i>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-clean" href="{{ url_for('discover_page') }}">
+                            <i class="fas fa-compass"></i>
+                            Discover
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-clean" href="{{ url_for('categories_page') }}">
+                            <i class="fas fa-layer-group"></i>
+                            Categories
+                        </a>
+                    </li>
+
+                </ul>
+
+                <!-- Search Bar -->
+                <div class="search-container-clean me-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control search-input-clean" placeholder="Search stories...">
+                        <button class="search-btn-clean" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                    <!-- Auth Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('login_page') }}" class="btn-clean btn-outline-clean">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </a>
+                        <a href="{{ url_for('signup_page') }}" class="btn-clean btn-primary-clean">
+                            <i class="fas fa-user-plus"></i>
+                            Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Block -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar-clean');
+            if (window.scrollY > 30) {
+                navbar.style.padding = '0.5rem 0';
+                navbar.style.boxShadow = '0 4px 25px rgba(44, 85, 48, 0.15)';
+            } else {
+                navbar.style.padding = '1rem 0';
+                navbar.style.boxShadow = '0 2px 20px rgba(44, 85, 48, 0.1)';
+            }
+        });
+
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input-clean');
+            const searchBtn = document.querySelector('.search-btn-clean');
+
+            // Search button click
+            searchBtn.addEventListener('click', function() {
+                performSearch();
+            });
+
+            // Enter key search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            function performSearch() {
+                const searchTerm = searchInput.value.trim();
+                if (searchTerm) {
+                    console.log('Searching for:', searchTerm);
+                    // Add actual search functionality here
+                    alert(`Searching for: "${searchTerm}"`);
+                    searchInput.value = '';
+                }
+            }
+
+            // Active link highlighting based on current page
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link-clean');
+
+            navLinks.forEach(link => {
+                const linkPath = link.getAttribute('href');
+                if (linkPath === currentPath || (currentPath === '/' && linkPath === '{{ url_for("home_page") }}')) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Add loading state to buttons
+            const buttons = document.querySelectorAll('.btn-clean');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') === '#') {
+                        e.preventDefault();
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                        }, 1500);
+                    }
+                });
+            });
+        });
+
+        // Mobile menu close on link click
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link-clean');
+            const navbarCollapse = document.getElementById('navbarMain');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+                        bsCollapse.hide();
+                    }
+                });
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
