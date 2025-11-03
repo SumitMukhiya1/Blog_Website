@@ -6,108 +6,118 @@ from datetime import date
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
+
 app = Flask(__name__)
 
-# Configure app FIRST
+# ====================== CONFIGURATION ======================
+
+# Secret key
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret-key-for-development")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///local_database.db")
+
+# Database URL (Render PostgreSQL fix)
+db_url = os.environ.get("DATABASE_URL")
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url or "sqlite:///local_database.db"
+
+# Upload folders
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['FEATURED_IMAGE_FOLDER'] = 'static/featured_images'
-app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1000 MB max file size
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
-
-# Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 
-# Initialize extensions
+# File upload rules
+app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1000 MB
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-# db.init_app(app)# Initialize db WITH the app
-# from flask_sqlalchemy import SQLAlchemy
-# db = SQLAlchemy(app)
-
+# ====================== EXTENSIONS ======================
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
 
-# NOW import models and routes AFTER db is initialized
+# Import models & routes AFTER app init
 from routes.models_routes import User, Link, Skill, Post, Comment, db
 from routes.authentication import authentication_route
 from routes.profile_route import edit_profile
 
+# Initialize database
 db.init_app(app)
 
+# Create tables ONCE when app starts
+with app.app_context():
+    db.create_all()
+    print("✅ Database tables created successfully!")
+
+# ====================== LOGIN MANAGER ======================
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables
-with app.app_context():
-    db.drop_all()
-    db.create_all()
-    print("All database tables created successfully!")
-
-# Import and register routes
+# Register blueprints/routes
 authentication_route(app)
 edit_profile(app)
 
+# ====================== ROUTES ======================
+
 @app.route('/')
 def home_page():
-    if current_user.is_authenticated:
-        user_info = {
-            "fullname": current_user.fullname,
-            "email": current_user.email,
-            "profile_image": current_user.profile_image,
-            "user_name": current_user.user_name,
-        }
-        blogs = Post.query.all()
-        posts = []
-        for blog in blogs:
-            user = User.query.filter_by(id=blog.user_id).first()
-            user_name = user.fullname if user else "Unknown User"
-            user_profile_image = user.profile_image if user else None
+    if not current_user.is_authenticated:
+        return redirect(url_for('landing_page'))
 
-            comments_section = Comment.query.filter_by(blog_id=blog.id).all()
-            comments_list = []
-            for c in comments_section:
-                comment_user = User.query.get(c.user_id)
-                comments_list.append({
-                    "content": c.content,
-                    "date": c.date.strftime('%b %d, %Y'),
-                    "user_name": comment_user.fullname if comment_user else "Unknown User",
-                    "user_profile_image": comment_user.profile_image if comment_user else None
-                })
+    user_info = {
+        "fullname": current_user.fullname,
+        "email": current_user.email,
+        "profile_image": current_user.profile_image,
+        "user_name": current_user.user_name,
+    }
 
-            # FIXED: Check if image exists and handle missing images
-            blog_image = None
-            if blog.image:
-                image_path = os.path.join(app.config['FEATURED_IMAGE_FOLDER'], blog.image)
-                if os.path.exists(image_path):
-                    blog_image = blog.image
-                else:
-                    print(f"DEBUG: Image not found: {image_path}")
-                    blog_image = None
+    blogs = Post.query.order_by(Post.date.desc()).all()
+    posts = []
 
-            posts.append({
-                "title": blog.title,
-                "content": blog.content,
-                "image": blog_image,  # This will be None if image doesn't exist
-                "name": user_name,
-                "profile_image": user_profile_image,
-                "date": blog.date,
-                "id": blog.id,
-                "Comments": comments_list
+    for blog in blogs:
+        user = User.query.filter_by(id=blog.user_id).first()
+        user_name = user.fullname if user else "Unknown User"
+        user_profile_image = user.profile_image if user else None
+
+        comments_section = Comment.query.filter_by(blog_id=blog.id).all()
+        comments_list = []
+        for c in comments_section:
+            comment_user = User.query.get(c.user_id)
+            comments_list.append({
+                "content": c.content,
+                "date": c.date.strftime('%b %d, %Y'),
+                "user_name": comment_user.fullname if comment_user else "Unknown User",
+                "user_profile_image": comment_user.profile_image if comment_user else None
             })
 
-        if not current_user.joined:
-            current_user.joined = str(date.today())
-            db.session.commit()
-    else:
-        return redirect(url_for('landing_page'))
+        blog_image = None
+        if blog.image:
+            image_path = os.path.join(app.config['FEATURED_IMAGE_FOLDER'], blog.image)
+            if os.path.exists(image_path):
+                blog_image = blog.image
+
+        posts.append({
+            "title": blog.title,
+            "content": blog.content,
+            "image": blog_image,
+            "name": user_name,
+            "profile_image": user_profile_image,
+            "date": blog.date,
+            "id": blog.id,
+            "Comments": comments_list
+        })
+
+    # Add joined date for first-time users
+    if not current_user.joined:
+        current_user.joined = str(date.today())
+        db.session.commit()
 
     return render_template('home.html', user_info=user_info, blogs=posts)
 
+# ---------------------- PROFILE PAGE ----------------------
 @app.route('/profile')
 @login_required
 def user_profile():
@@ -131,22 +141,24 @@ def user_profile():
         "user_all_blogs": str(len(user_all_blogs)),
         "user_posts": user_all_blogs
     }
+
     return render_template('profile.html', user_info=user_info)
 
+# ---------------------- LANDING PAGE ----------------------
 @app.route('/landing_page')
 def landing_page():
     if current_user.is_authenticated:
         return redirect(url_for('home_page'))
     return render_template('landing_page.html')
 
-@login_required
+# ---------------------- CREATE POST ----------------------
 @app.route('/make_post', methods=['GET', 'POST'])
+@login_required
 def make_post():
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
     if request.method == 'POST':
-        # Getting featured image
         post_featured_image = request.files.get('featured_image')
         image_filename = None
 
@@ -154,34 +166,26 @@ def make_post():
             if allowed_file(post_featured_image.filename):
                 filename = secure_filename(post_featured_image.filename)
                 image_path = os.path.join(app.config['FEATURED_IMAGE_FOLDER'], filename)
-
                 try:
                     post_featured_image.save(image_path)
                     image_filename = filename
-                except Exception as e:
+                except Exception:
                     flash('Error saving image. Please try again.', 'danger')
             else:
                 flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
 
-        # Getting other info
         post_title = request.form.get('title')
         post_content = request.form.get('content')
         user_id = current_user.id
 
-        # Save post in database
         if post_title and post_content:
             try:
-                new_post = Post(
-                    title=post_title,
-                    content=post_content,
-                    user_id=user_id,
-                    image=image_filename,
-                )
+                new_post = Post(title=post_title, content=post_content, user_id=user_id, image=image_filename)
                 db.session.add(new_post)
                 db.session.commit()
                 flash('Post created successfully!', 'success')
                 return redirect(url_for('make_post'))
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
                 flash('Error creating post. Please try again.', 'danger')
         else:
@@ -189,6 +193,7 @@ def make_post():
 
     return render_template('make_post.html')
 
+# ---------------------- REMOVE SKILL ----------------------
 @app.route('/remove-skill', methods=['POST'])
 def remove_skill():
     if not current_user.is_authenticated:
@@ -201,22 +206,17 @@ def remove_skill():
         return jsonify({'success': False, 'message': 'No skill provided'})
 
     try:
-        skill_record = Skill.query.filter_by(
-            user_id=current_user.id,
-            skill=skill_to_remove
-        ).first()
-
+        skill_record = Skill.query.filter_by(user_id=current_user.id, skill=skill_to_remove).first()
         if skill_record:
             db.session.delete(skill_record)
             db.session.commit()
             return jsonify({'success': True, 'message': 'Skill removed successfully'})
-        else:
-            return jsonify({'success': False, 'message': 'Skill not found'})
-
+        return jsonify({'success': False, 'message': 'Skill not found'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
+# ---------------------- DELETE LINK ----------------------
 @app.route('/delete-link/<int:link_id>', methods=['POST'])
 def delete_link(link_id):
     if not current_user.is_authenticated:
@@ -227,9 +227,9 @@ def delete_link(link_id):
         db.session.delete(link)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Link deleted successfully'})
-    else:
-        return jsonify({'success': False, 'message': 'Link not found or access denied'})
+    return jsonify({'success': False, 'message': 'Link not found or access denied'})
 
+# ---------------------- COMMENT ----------------------
 @app.route('/comment', methods=['POST'])
 def comment():
     content = request.form.get("content", "").strip()
@@ -241,24 +241,24 @@ def comment():
     if not blog_id_str or not blog_id_str.isdigit():
         flash("Invalid blog ID.", "danger")
         return redirect(url_for('home_page'))
-    blog_id = int(blog_id_str)
 
     if not current_user.is_authenticated:
         flash("You must be logged in to comment.", "warning")
         return redirect(url_for('login_page'))
-    user_id = int(current_user.id)
 
-    new_comment = Comment(user_id=user_id, blog_id=blog_id, content=content)
+    new_comment = Comment(user_id=current_user.id, blog_id=int(blog_id_str), content=content)
     db.session.add(new_comment)
     db.session.commit()
 
     flash("Comment added successfully!", "success")
     return redirect(url_for('home_page'))
 
+# ---------------------- SIGN OUT ----------------------
 @app.route('/sign_out')
 def sign_out():
     logout_user()
     return render_template('landing_page.html')
 
+# ====================== RUN APP ======================
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
