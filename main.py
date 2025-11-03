@@ -5,19 +5,16 @@ from flask_login import LoginManager, current_user, login_required, logout_user
 from datetime import date
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+
 load_dotenv()
-# Importing routes
-from routes.models_routes import User, db, Link, Skill, Post, Comment
-from routes.authentication import authentication_route
-from routes.profile_route import edit_profile
 
 app = Flask(__name__)
+
+# Configure app FIRST
 app.secret_key = os.environ.get("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['FEATURED_IMAGE_FOLDER'] = 'static/featured_images'
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1000 MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -25,27 +22,31 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 
+# Initialize extensions
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy(app)  # Initialize db WITH the app
+
+bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
 
-with app.app_context():
-    db.create_all()
+# NOW import models and routes AFTER db is initialized
+from routes.models_routes import User, Link, Skill, Post, Comment
+from routes.authentication import authentication_route
+from routes.profile_route import edit_profile
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Create tables
+with app.app_context():
+    db.create_all()
+    print("All database tables created successfully!")
 
-# Database of user
-db.init_app(app)
-bcrypt = Bcrypt(app)
-
-# Authentication route
+# Import and register routes
 authentication_route(app)
-
-# Edit profile route
 edit_profile(app)
-
 
 @app.route('/')
 def home_page():
@@ -103,8 +104,6 @@ def home_page():
 
     return render_template('home.html', user_info=user_info, blogs=posts)
 
-
-
 @app.route('/profile')
 @login_required
 def user_profile():
@@ -130,13 +129,11 @@ def user_profile():
     }
     return render_template('profile.html', user_info=user_info)
 
-
 @app.route('/landing_page')
 def landing_page():
     if current_user.is_authenticated:
         return redirect(url_for('home_page'))
     return render_template('landing_page.html')
-
 
 @login_required
 @app.route('/make_post', methods=['GET', 'POST'])
@@ -188,7 +185,6 @@ def make_post():
 
     return render_template('make_post.html')
 
-
 @app.route('/remove-skill', methods=['POST'])
 def remove_skill():
     if not current_user.is_authenticated:
@@ -217,7 +213,6 @@ def remove_skill():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
-
 @app.route('/delete-link/<int:link_id>', methods=['POST'])
 def delete_link(link_id):
     if not current_user.is_authenticated:
@@ -230,7 +225,6 @@ def delete_link(link_id):
         return jsonify({'success': True, 'message': 'Link deleted successfully'})
     else:
         return jsonify({'success': False, 'message': 'Link not found or access denied'})
-
 
 @app.route('/comment', methods=['POST'])
 def comment():
@@ -262,6 +256,5 @@ def sign_out():
     logout_user()
     return render_template('landing_page.html')
 
-
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
