@@ -28,6 +28,8 @@ os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
 
+with app.app_context():
+    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
