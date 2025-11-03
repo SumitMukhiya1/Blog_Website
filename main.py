@@ -7,12 +7,11 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 load_dotenv()
-
 app = Flask(__name__)
 
 # Configure app FIRST
-app.secret_key = os.environ.get("SECRET_KEY")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret-key-for-development")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///local_database.db")
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['FEATURED_IMAGE_FOLDER'] = 'static/featured_images'
 app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1000 MB max file size
@@ -23,17 +22,21 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 
 # Initialize extensions
-from flask_sqlalchemy import SQLAlchemy
-db = SQLAlchemy(app)  # Initialize db WITH the app
+
+# db.init_app(app)# Initialize db WITH the app
+# from flask_sqlalchemy import SQLAlchemy
+# db = SQLAlchemy(app)
 
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
 
 # NOW import models and routes AFTER db is initialized
-from routes.models_routes import User, Link, Skill, Post, Comment
+from routes.models_routes import User, Link, Skill, Post, Comment, db
 from routes.authentication import authentication_route
 from routes.profile_route import edit_profile
+
+db.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -41,6 +44,7 @@ def load_user(user_id):
 
 # Create tables
 with app.app_context():
+    db.drop_all()
     db.create_all()
     print("All database tables created successfully!")
 
