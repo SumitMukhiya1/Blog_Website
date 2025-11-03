@@ -5,11 +5,14 @@ from flask_login import LoginManager, current_user, login_required, logout_user
 from datetime import date
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from routes.models_routes import User, Link, Skill, Post, Comment, db
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+from flask_migrate import Migrate
+migrate = Migrate(app, db)
 
 # ====================== CONFIGURATION ======================
 
@@ -39,7 +42,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
 
 # Import models & routes AFTER app init
-from routes.models_routes import User, Link, Skill, Post, Comment, db
 from routes.authentication import authentication_route
 from routes.profile_route import edit_profile
 
