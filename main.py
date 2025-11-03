@@ -3,18 +3,20 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, current_user, login_required, logout_user
 from datetime import date
 from werkzeug.utils import secure_filename
-import gunicorn
-
+from dotenv import load_dotenv
+load_dotenv()
 # Importing routes
 from routes.models_routes import User, db, Link, Skill, Post, Comment
 from routes.authentication import authentication_route
 from routes.profile_route import edit_profile
 
 app = Flask(__name__)
-app.secret_key = "jhguyhiugnbk"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Sumitboss%401234@localhost:5432/users'
+app.secret_key = os.environ.get("SECRET_KEY") or "mysecretkey"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or "postgresql://postgres:Sumitboss%401234@localhost:5432/users"
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['FEATURED_IMAGE_FOLDER'] = 'static/featured_images'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1000 MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -98,8 +100,9 @@ def home_page():
     return render_template('home.html', user_info=user_info, blogs=posts)
 
 
-@login_required
+
 @app.route('/profile')
+@login_required
 def user_profile():
     user_links = Link.query.filter_by(user_id=current_user.id).all()
     user_skills = Skill.query.filter_by(user_id=current_user.id).all()
