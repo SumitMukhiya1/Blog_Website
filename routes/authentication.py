@@ -2,6 +2,10 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, current_user
 from routes.models_routes import User, db
 from datetime import date
+from flask_bcrypt import Bcrypt, check_password_hash
+
+bcrypt = Bcrypt()
+
 
 def authentication_route(app):
     @app.route('/signup', methods=['GET', 'POST'])
@@ -14,13 +18,15 @@ def authentication_route(app):
             fullname = request.form['fullname']
             email = request.form['email']
             password = request.form['password']
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
             new_user = User(
-                fullname= fullname,
-                email = email,
-                password = password
+                fullname=fullname,
+                email=email,
+                password=hashed_password
             )
             db.session.add(new_user)
             db.session.commit()
+
             print("user added sucessfully")
 
             return redirect(url_for('login_page'))
@@ -38,7 +44,7 @@ def authentication_route(app):
             if not user:
                 flash("No account found with that email")
                 return render_template('login.html')
-            if user and user.password == password:
+            if check_password_hash(user.password, password):
                 login_user(user)
                 return redirect(url_for('home_page'))
             else:

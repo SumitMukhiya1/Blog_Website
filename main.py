@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, current_user, login_required, logout_user
 from datetime import date
 from werkzeug.utils import secure_filename
@@ -11,8 +12,8 @@ from routes.authentication import authentication_route
 from routes.profile_route import edit_profile
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or "mysecretkey"
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or "postgresql://postgres:Sumitboss%401234@localhost:5432/users"
+app.secret_key = os.environ.get("SECRET_KEY")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
 app.config['FEATURED_IMAGE_FOLDER'] = 'static/featured_images'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -35,6 +36,7 @@ def load_user(user_id):
 
 # Database of user
 db.init_app(app)
+bcrypt = Bcrypt(app)
 
 # Authentication route
 authentication_route(app)
@@ -260,4 +262,4 @@ def sign_out():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run()
