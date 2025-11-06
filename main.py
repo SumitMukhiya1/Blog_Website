@@ -2,24 +2,16 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, current_user, login_required, logout_user
-from datetime import date
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from routes.models_routes import User, Link, Skill, Post, Comment, db
 
 # Load environment variables
 load_dotenv()
-
 app = Flask(__name__)
-from flask_migrate import Migrate
-migrate = Migrate(app, db)
-
 # ====================== CONFIGURATION ======================
-
-# Secret key
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret-key-for-development")
 
-# Database URL (Render PostgreSQL fix)
 db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
@@ -33,7 +25,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['FEATURED_IMAGE_FOLDER'], exist_ok=True)
 
 # File upload rules
-app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1000 MB
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 1000 MB
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 # ====================== EXTENSIONS ======================
@@ -41,110 +33,24 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
 
-# Import models & routes AFTER app init
-from routes.authentication import authentication_route
-from routes.profile_route import edit_profile
-
 # Initialize database
 db.init_app(app)
-
-# Create tables ONCE when app starts
-with app.app_context():
-    db.create_all()
-    print("✅ Database tables created successfully!")
-
 # ====================== LOGIN MANAGER ======================
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Register blueprints/routes
+# Import routes
+from routes.authentication import authentication_route
+from routes.profile_route import edit_profile
+from routes.home_routes import home_route
+from routes.make_post_routes import make_post_routes
+
+
 authentication_route(app)
 edit_profile(app)
-
-# ====================== ROUTES ======================
-
-@app.route('/')
-def home_page():
-    if not current_user.is_authenticated:
-        return redirect(url_for('landing_page'))
-
-    user_info = {
-        "fullname": current_user.fullname,
-        "email": current_user.email,
-        "profile_image": current_user.profile_image,
-        "user_name": current_user.user_name,
-    }
-
-    blogs = Post.query.order_by(Post.date.desc()).all()
-    posts = []
-
-    for blog in blogs:
-        user = User.query.filter_by(id=blog.user_id).first()
-        user_name = user.fullname if user else "Unknown User"
-        user_profile_image = user.profile_image if user else None
-
-        comments_section = Comment.query.filter_by(blog_id=blog.id).all()
-        comments_list = []
-        for c in comments_section:
-            comment_user = User.query.get(c.user_id)
-            comments_list.append({
-                "content": c.content,
-                "date": c.date.strftime('%b %d, %Y'),
-                "user_name": comment_user.fullname if comment_user else "Unknown User",
-                "user_profile_image": comment_user.profile_image if comment_user else None
-            })
-
-        blog_image = None
-        if blog.image:
-            image_path = os.path.join(app.config['FEATURED_IMAGE_FOLDER'], blog.image)
-            if os.path.exists(image_path):
-                blog_image = blog.image
-
-        posts.append({
-            "title": blog.title,
-            "content": blog.content,
-            "image": blog_image,
-            "name": user_name,
-            "profile_image": user_profile_image,
-            "date": blog.date,
-            "id": blog.id,
-            "Comments": comments_list
-        })
-
-    # Add joined date for first-time users
-    if not current_user.joined:
-        current_user.joined = str(date.today())
-        db.session.commit()
-
-    return render_template('home.html', user_info=user_info, blogs=posts)
-
-# ---------------------- PROFILE PAGE ----------------------
-@app.route('/profile')
-@login_required
-def user_profile():
-    user_links = Link.query.filter_by(user_id=current_user.id).all()
-    user_skills = Skill.query.filter_by(user_id=current_user.id).all()
-    user_all_blogs = Post.query.filter_by(user_id=current_user.id).all()
-
-    user_info = {
-        "fullname": current_user.fullname,
-        "email": current_user.email,
-        "profile_image": current_user.profile_image,
-        "user_name": current_user.user_name,
-        "about": current_user.about,
-        "profession": current_user.profession,
-        "bio": current_user.bio,
-        "education": current_user.education,
-        "location": f"{current_user.country} || {current_user.city}",
-        "joined": current_user.joined,
-        "links": user_links,
-        "skills": [skill.skill for skill in user_skills],
-        "user_all_blogs": str(len(user_all_blogs)),
-        "user_posts": user_all_blogs
-    }
-
-    return render_template('profile.html', user_info=user_info)
+home_route(app)
+make_post_routes(app)
 
 # ---------------------- LANDING PAGE ----------------------
 @app.route('/landing_page')
@@ -152,48 +58,6 @@ def landing_page():
     if current_user.is_authenticated:
         return redirect(url_for('home_page'))
     return render_template('landing_page.html')
-
-# ---------------------- CREATE POST ----------------------
-@app.route('/make_post', methods=['GET', 'POST'])
-@login_required
-def make_post():
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-    if request.method == 'POST':
-        post_featured_image = request.files.get('featured_image')
-        image_filename = None
-
-        if post_featured_image and post_featured_image.filename != '':
-            if allowed_file(post_featured_image.filename):
-                filename = secure_filename(post_featured_image.filename)
-                image_path = os.path.join(app.config['FEATURED_IMAGE_FOLDER'], filename)
-                try:
-                    post_featured_image.save(image_path)
-                    image_filename = filename
-                except Exception:
-                    flash('Error saving image. Please try again.', 'danger')
-            else:
-                flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
-
-        post_title = request.form.get('title')
-        post_content = request.form.get('content')
-        user_id = current_user.id
-
-        if post_title and post_content:
-            try:
-                new_post = Post(title=post_title, content=post_content, user_id=user_id, image=image_filename)
-                db.session.add(new_post)
-                db.session.commit()
-                flash('Post created successfully!', 'success')
-                return redirect(url_for('make_post'))
-            except Exception:
-                db.session.rollback()
-                flash('Error creating post. Please try again.', 'danger')
-        else:
-            flash('Please fill title and content fields.', 'danger')
-
-    return render_template('make_post.html')
 
 # ---------------------- REMOVE SKILL ----------------------
 @app.route('/remove-skill', methods=['POST'])
@@ -261,6 +125,51 @@ def sign_out():
     logout_user()
     return render_template('landing_page.html')
 
+@app.route('/post_detail/<int:post_id>', methods=['GET', "POST"])
+def post_detail(post_id):
+    blog = Post.query.get(post_id)
+    user = User.query.get(blog.user_id)
+    comments = Comment.query.filter_by(blog_id=post_id).all()
+    # Prepare comments data with user info
+    comments_data = []
+
+    for comment in comments:
+        comment_user = User.query.get(comment.user_id)
+        comments_data.append({
+            "content": comment.content,
+            "date": comment.date.strftime("%B %d, %Y"),
+            "fullname": User.query.get(comment.user_id).fullname,
+            "profile_image": User.query.get(comment.user_id).profile_image,
+        })
+
+    # Prepare blog data
+    blogs_data = {
+        "title": blog.title,
+        "profile_image": user.profile_image,  # blog author image
+        "featured_image": blog.image,
+        "fullname": user.fullname,
+        "date": blog.date.strftime("%B %d, %Y"),
+        "content": blog.content,
+        "bio": user.bio,
+        "comments": comments_data,
+        "blog_id": post_id
+    }
+
+    return render_template('post_detail.html', blog_data=blogs_data)
+
+@app.route('/post_detail_comment', methods=['GET','POST'])
+def post_detail_comment():
+    if request.method == "POST":
+        blog_id = request.form.get("blog_id")
+        if blog_id:
+            user_id = current_user.id
+            content = request.form.get('content')
+            new_comment = Comment(user_id=int(user_id), blog_id=int(blog_id), content=content)
+            db.session.add(new_comment)
+            db.session.commit()
+            return redirect(url_for('post_detail', post_id=blog_id))
+    return render_template(url_for('home.html'))
+
 # ====================== RUN APP ======================
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)

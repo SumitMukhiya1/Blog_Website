@@ -1,9 +1,9 @@
 from flask import render_template, request, redirect, url_for,flash
-from flask_login import current_user
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 import os
 import time
-from routes.models_routes import User, db, Link, Skill
+from routes.models_routes import db, Link, Skill, Post
 
 
 def edit_profile(app):
@@ -173,3 +173,31 @@ def edit_profile(app):
         }
 
         return render_template('edite_profile.html', user_info=user_info)
+
+
+    #user profile
+    @app.route('/profile')
+    @login_required
+    def user_profile():
+        user_links = Link.query.filter_by(user_id=current_user.id).all()
+        user_skills = Skill.query.filter_by(user_id=current_user.id).all()
+        user_all_blogs = Post.query.filter_by(user_id=current_user.id).all()
+
+        user_info = {
+            "fullname": current_user.fullname,
+            "email": current_user.email,
+            "profile_image": current_user.profile_image,
+            "user_name": current_user.user_name,
+            "about": current_user.about,
+            "profession": current_user.profession,
+            "bio": current_user.bio,
+            "education": current_user.education,
+            "location": f"{current_user.country} || {current_user.city}",
+            "joined": current_user.joined,
+            "links": user_links,
+            "skills": [skill.skill for skill in user_skills],
+            "user_all_blogs": str(len(user_all_blogs)),
+            "user_posts": user_all_blogs
+        }
+
+        return render_template('profile.html', user_info=user_info)

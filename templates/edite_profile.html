@@ -516,7 +516,7 @@
     {% endwith %}
 
     <form method="POST" action="{{ url_for('editing_profile_page') }}" enctype="multipart/form-data">
-        <!-- Profile Picture - UPDATED WITH USER ICON LOGIC -->
+        <!-- Profile Picture - FIXED VERSION -->
         <div class="edit-card">
             <div class="card-header">
                 <h2 class="card-title">
@@ -526,20 +526,17 @@
             </div>
             <div class="avatar-section">
                 <div class="avatar-container">
-                    {% if user_info.profile_image %}
-                        <img src="{{ url_for('static', filename='profile_pics/' + user_info.profile_image) }}"
-                             alt="Profile"
-                             class="avatar"
-                             id="avatarPreview"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="avatar" id="avatarIcon" style="display: none; align-items: center; justify-content: center; background: var(--gray-100);">
-                            <i class="fas fa-user" style="color: var(--gray-400); font-size: 3rem;"></i>
-                        </div>
-                    {% else %}
-                        <div class="avatar" id="avatarPreview" style="display: flex; align-items: center; justify-content: center; background: var(--gray-100);">
-                            <i class="fas fa-user" style="color: var(--gray-400); font-size: 3rem;"></i>
-                        </div>
-                    {% endif %}
+                    <div id="avatarDisplay">
+                        {% if user_info.profile_image %}
+                            <img src="{{ url_for('static', filename='profile_pics/' + user_info.profile_image) }}"
+                                 class="avatar"
+                                 id="avatarPreview">
+                        {% else %}
+                            <div class="avatar" id="avatarIcon" style="display: flex; align-items: center; justify-content: center; background: var(--gray-100);">
+                                <i class="fas fa-user" style="color: var(--gray-400); font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
                     <div class="avatar-edit" onclick="document.getElementById('avatarInput').click()">
                         <i class="fas fa-pen"></i>
                     </div>
@@ -549,13 +546,13 @@
                        name="profile_picture"
                        class="file-input"
                        accept="image/*"
-                       onchange="updateAvatar(this)">
+                       onchange="updateAvatarPreview(this)">
                 <div class="avatar-actions">
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('avatarInput').click()">
                         <i class="fas fa-upload"></i>
                         Upload New Photo
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="resetAvatar()">
+                    <button type="button" class="btn btn-secondary" onclick="resetAvatarPreview()">
                         <i class="fas fa-trash"></i>
                         Remove Photo
                     </button>
@@ -765,48 +762,48 @@
         </div>
 
         <!-- Social Links -->
-<div class="edit-card">
-    <div class="card-header">
-        <h2 class="card-title">
-            <i class="fas fa-link"></i>
-            Social Links
-        </h2>
-    </div>
-    <div class="card-body">
-        <div class="form-group">
-            <div class="links-list" id="linksContainer">
-                {% if user_info.links %}
-                    {% for link in user_info.links %}
-                        <div class="link-item" data-link-id="{{ link.id }}">
-                            <select class="form-control link-platform" name="website">
-                                <option value="website" {% if link.website == 'website' %}selected{% endif %}>Website</option>
-                                <option value="linkedin" {% if link.website == 'linkedin' %}selected{% endif %}>LinkedIn</option>
-                                <option value="github" {% if link.website == 'github' %}selected{% endif %}>GitHub</option>
-                                <option value="twitter" {% if link.website == 'twitter' %}selected{% endif %}>Twitter</option>
-                                <option value="instagram" {% if link.website == 'instagram' %}selected{% endif %}>Instagram</option>
-                                <option value="facebook" {% if link.website == 'facebook' %}selected{% endif %}>Facebook</option>
-                            </select>
-                            <input type="url"
-                                   class="form-control link-url"
-                                   name="link"
-                                   value="{{ link.link }}"
-                                   placeholder="https://example.com">
-                            <button type="button" class="link-delete" onclick="removeLink(this)">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+        <div class="edit-card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-link"></i>
+                    Social Links
+                </h2>
             </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="links-list" id="linksContainer">
+                        {% if user_info.links %}
+                            {% for link in user_info.links %}
+                                <div class="link-item" data-link-id="{{ link.id }}">
+                                    <select class="form-control link-platform" name="website">
+                                        <option value="website" {% if link.website == 'website' %}selected{% endif %}>Website</option>
+                                        <option value="linkedin" {% if link.website == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+                                        <option value="github" {% if link.website == 'github' %}selected{% endif %}>GitHub</option>
+                                        <option value="twitter" {% if link.website == 'twitter' %}selected{% endif %}>Twitter</option>
+                                        <option value="instagram" {% if link.website == 'instagram' %}selected{% endif %}>Instagram</option>
+                                        <option value="facebook" {% if link.website == 'facebook' %}selected{% endif %}>Facebook</option>
+                                    </select>
+                                    <input type="url"
+                                           class="form-control link-url"
+                                           name="link"
+                                           value="{{ link.link }}"
+                                           placeholder="https://example.com">
+                                    <button type="button" class="link-delete" onclick="removeLink(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
 
-            <button type="button" class="add-link" onclick="addLink()">
-                <i class="fas fa-plus"></i>
-                Add Another Link
-            </button>
-            <div class="help-text">Add links to your website, social media profiles, or portfolio</div>
+                    <button type="button" class="add-link" onclick="addLink()">
+                        <i class="fas fa-plus"></i>
+                        Add Another Link
+                    </button>
+                    <div class="help-text">Add links to your website, social media profiles, or portfolio</div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
         <!-- About Section -->
         <div class="edit-card">
@@ -873,74 +870,57 @@
         }
     }
 
-    // Avatar functions
-    function updateAvatar(input) {
-        const preview = document.getElementById('avatarPreview');
-        const icon = document.getElementById('avatarIcon');
-
+    // Fixed Avatar functions
+    function updateAvatarPreview(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                // If we're showing the icon, switch to image
-                if (preview.tagName === 'DIV') {
+                const avatarDisplay = document.getElementById('avatarDisplay');
+
+                // Check if we're currently showing the icon or an image
+                const currentIcon = document.getElementById('avatarIcon');
+                const currentImage = document.getElementById('avatarPreview');
+
+                if (currentImage) {
+                    // Update existing image
+                    currentImage.src = e.target.result;
+                } else {
                     // Create new image element
+                    avatarDisplay.innerHTML = '';
                     const newImg = document.createElement('img');
                     newImg.src = e.target.result;
                     newImg.alt = "Profile";
                     newImg.className = "avatar";
                     newImg.id = "avatarPreview";
-                    newImg.onerror = "this.style.display='none'; this.nextElementSibling.style.display='flex';";
-
-                    // Replace the icon with image
-                    preview.parentNode.replaceChild(newImg, preview);
-
-                    // Add the icon as fallback
-                    const avatarContainer = document.querySelector('.avatar-container');
-                    if (!icon) {
-                        const fallbackIcon = document.createElement('div');
-                        fallbackIcon.className = "avatar";
-                        fallbackIcon.id = "avatarIcon";
-                        fallbackIcon.style.cssText = "display: none; align-items: center; justify-content: center; background: var(--gray-100);";
-                        fallbackIcon.innerHTML = '<i class="fas fa-user" style="color: var(--gray-400); font-size: 3rem;"></i>';
-                        newImg.parentNode.insertBefore(fallbackIcon, newImg.nextSibling);
-                    }
-                } else {
-                    // Update existing image
-                    preview.src = e.target.result;
+                    newImg.onerror = function() {
+                        // If image fails to load, show the icon
+                        this.style.display = 'none';
+                        showAvatarIcon();
+                    };
+                    avatarDisplay.appendChild(newImg);
                 }
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function resetAvatar() {
-        const preview = document.getElementById('avatarPreview');
-        const icon = document.getElementById('avatarIcon');
+    function resetAvatarPreview() {
+        const avatarDisplay = document.getElementById('avatarDisplay');
         const input = document.getElementById('avatarInput');
 
-        // Show the user icon
-        if (preview && preview.tagName === 'IMG') {
-            preview.style.display = 'none';
-        }
-        if (icon) {
-            icon.style.display = 'flex';
-        } else {
-            // Create icon if it doesn't exist
-            const avatarContainer = document.querySelector('.avatar-container');
-            const newIcon = document.createElement('div');
-            newIcon.className = "avatar";
-            newIcon.id = "avatarIcon";
-            newIcon.style.cssText = "display: flex; align-items: center; justify-content: center; background: var(--gray-100);";
-            newIcon.innerHTML = '<i class="fas fa-user" style="color: var(--gray-400); font-size: 3rem;"></i>';
-
-            if (preview && preview.tagName === 'IMG') {
-                preview.parentNode.replaceChild(newIcon, preview);
-            } else {
-                avatarContainer.insertBefore(newIcon, avatarContainer.firstChild);
-            }
-        }
-
+        avatarDisplay.innerHTML = '';
+        showAvatarIcon();
         input.value = '';
+    }
+
+    function showAvatarIcon() {
+        const avatarDisplay = document.getElementById('avatarDisplay');
+        const iconDiv = document.createElement('div');
+        iconDiv.className = "avatar";
+        iconDiv.id = "avatarIcon";
+        iconDiv.style.cssText = "display: flex; align-items: center; justify-content: center; background: var(--gray-100);";
+        iconDiv.innerHTML = '<i class="fas fa-user" style="color: var(--gray-400); font-size: 3rem;"></i>';
+        avatarDisplay.appendChild(iconDiv);
     }
 
     // Skills functions
@@ -973,7 +953,6 @@
         }
     }
 
-    // Update your removeSkill function
     function removeSkill(button) {
         const skillTag = button.parentElement;
         const skill = skillTag.querySelector('input[type="hidden"]').value;
@@ -1006,7 +985,7 @@
         });
     }
 
-    // Links functions - ADDED THE MISSING addLink FUNCTION
+    // Links functions
     function addLink() {
         const container = document.getElementById('linksContainer');
         const linkItem = document.createElement('div');
@@ -1156,12 +1135,15 @@
         setupLocationSuggestions();
 
         // Enter key for skills
-        document.getElementById('skillInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addSkill();
-            }
-        });
+        const skillInput = document.getElementById('skillInput');
+        if (skillInput) {
+            skillInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSkill();
+                }
+            });
+        }
 
         // Add subtle animations to cards
         const cards = document.querySelectorAll('.edit-card');

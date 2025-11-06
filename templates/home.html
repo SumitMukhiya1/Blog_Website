@@ -1130,7 +1130,7 @@
     <div class="nav-container">
         <a href="#" class="logo">BlogSpace</a>
         <div class="nav-links">
-            <a href="#" class="nav-link">Home</a>
+            <a href="{{ url_for('home_page') }}" class="nav-link">Home</a>
             <a href="#" class="nav-link">Explore</a>
             <a href="#" class="nav-link">Bookmarks</a>
             <a href="#" class="nav-link">Profile</a>
@@ -1176,7 +1176,8 @@
         <!-- Posts Column -->
         <div class="posts-column">
             <!-- Dynamic Blog Posts - Initial 10 posts -->
-            {% for blog in blogs[:10] %}
+            {% for blog in blogs[:50] %}
+            <a href="{{ url_for('post_detail', post_id=blog.id) }}" style="all: unset; cursor: pointer;">
             <div class="post-card" data-post-id="{{ blog.id }}">
                 <div class="post-content-wrapper">
                     <div class="post-header">
@@ -1203,6 +1204,7 @@
                             No content available for this post.
                         {% endif %}
                     </p>
+                </a>
 
                     <div class="post-footer">
                         <!-- Left side: Like and Comment -->
@@ -1250,6 +1252,7 @@
                     </div>
                 </div>
                 <!-- Featured Image on the right side -->
+                <a href="#" style="all: unset; cursor: pointer;">
                 <div class="post-image-container">
                     {% if blog.image %}
                         <img src="{{ url_for('static', filename='featured_images/' + blog.image) }}" alt="{{ blog.title }}" class="post-image">
@@ -1257,6 +1260,7 @@
                         <img src="{{ url_for('static', filename='defaults/default-blog.jpg') }}" alt="Default Blog Image" class="post-image">
                     {% endif %}
                 </div>
+                    <a/>
                 <!-- Comment Modal -->
                 <div class="comments-modal">
                     <div class="comments-container">

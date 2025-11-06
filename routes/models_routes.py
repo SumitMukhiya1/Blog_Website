@@ -41,6 +41,9 @@ class Post(db.Model):
     content = db.Column(db.String())
     image = db.Column(db.String())
     date = db.Column(db.DateTime, default=datetime.utcnow)
+    category = db.Column(db.String())
+    tags = db.Column(db.String())
+    excerpt = db.Column(db.String())
 
 class Comment(db.Model):
     __tablename__ = 'comment'
