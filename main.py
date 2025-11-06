@@ -34,6 +34,9 @@ login_manager.login_view = "login_page"
 
 # Initialize database
 db.init_app(app)
+with app.app_context():
+    db.drop_all()
+    db.create_all()
 # ====================== LOGIN MANAGER ======================
 @login_manager.user_loader
 def load_user(user_id):
