@@ -41,7 +41,7 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Desktop Navigation - Copied from Homepage */
+        /* Desktop Navigation - Updated with Readium logo */
         .desktop-nav {
             background: var(--white);
             box-shadow: var(--shadow-md);
@@ -63,12 +63,24 @@
             justify-content: space-between;
         }
 
-        .logo {
-            font-family: 'Playfair Display', serif;
+        /* Readium Logo - Same as homepage */
+        .navbar-brand-clean {
             font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--black);
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            color: #000000 !important;
             text-decoration: none;
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
+            margin-right: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar-brand-clean i {
+            color: #000000;
+            font-size: 1.6rem;
+            margin-right: 0.5rem;
         }
 
         /* Circular Back Button - Positioned below navbar */
@@ -498,7 +510,6 @@
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
-            flex-shrink: 0;
         }
 
         .comment-content {
@@ -811,6 +822,10 @@
             .back-button-container {
                 top: 60px;
             }
+
+            .navbar-brand-clean {
+                font-size: 1.4rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -838,14 +853,21 @@
                 width: 40px;
                 height: 40px;
             }
+
+            .navbar-brand-clean {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Desktop Navigation - Copied from Homepage -->
+    <!-- Desktop Navigation - Updated with Readium logo -->
     <nav class="desktop-nav">
         <div class="nav-container">
-            <a href="#" class="logo">BlogSpace</a>
+            <a class="navbar-brand-clean" href="{{ url_for('home_page') }}">
+                <i class="fas fa-book-reader"></i>
+                Readium
+            </a>
         </div>
     </nav>
 
@@ -1146,32 +1168,6 @@
                     alert('Share functionality would be implemented here!');
                 });
             });
-
-            // Comment form submission
-            const commentForm = document.querySelector('.comment-form');
-            const commentInput = commentForm.querySelector('.comment-input');
-            const commentSubmit = commentForm.querySelector('.comment-submit');
-
-            commentSubmit.addEventListener('click', function(e) {
-                e.preventDefault();
-                const commentText = commentInput.value.trim();
-
-                if (commentText) {
-                    // Show loading state
-                    const originalText = this.textContent;
-                    this.innerHTML = 'Posting...';
-                    this.disabled = true;
-
-                    // Simulate API call
-                    setTimeout(() => {
-                        alert('Comment submitted: ' + commentText);
-                        commentInput.value = '';
-                        this.textContent = originalText;
-                        this.disabled = false;
-                    }, 1000);
-                } else {
-                    alert('Please enter a comment before submitting.');
-                }
             });
         });
     </script>

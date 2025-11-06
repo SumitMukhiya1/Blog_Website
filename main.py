@@ -1,8 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, current_user, login_required, logout_user
-from werkzeug.utils import secure_filename
+from flask_login import LoginManager, current_user, logout_user
 from dotenv import load_dotenv
 from routes.models_routes import User, Link, Skill, Post, Comment, db
 
